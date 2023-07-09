@@ -1,21 +1,33 @@
 const express = require('express');
 const app = express();
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
 
-// Parse JSON and form data in the request body
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.get('/', function(req, res) {
+    res.sendFile(__dirname + '/index.html');
+});
 
-// Handle POST request for receiving messages
-app.post('/messages', (req, res) => {
-    const message = req.body.message;
+// Handle incoming connections
+io.on('connection', function(socket) {
+    console.log('A user connected');
 
-    // Process the received message (e.g., store it, send it to other users, etc.)
-    // Code for processing the message goes here
+    // Handle incoming messages
+    socket.on('chat message', function(data) {
+        // Broadcast the message to all connected clients
+        io.emit('chat message', {
+            sender: socket.id,
+            message: data.message
+        });
+    });
 
-    res.sendStatus(200); // Send a response status indicating success
+    // Handle disconnections
+    socket.on('disconnect', function() {
+        console.log('A user disconnected');
+    });
 });
 
 // Start the server
-app.listen(3000, () => {
-    console.log('Server started on port 3000');
+const PORT = 3000;
+http.listen(PORT, function() {
+    console.log(`Server listening on port ${PORT}`);
 });
