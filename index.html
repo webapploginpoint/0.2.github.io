@@ -1,50 +1,49 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Live Chat</title>
+    <title>Live Chat Example</title>
+    <style>
+        #chatbox {
+            width: 300px;
+            height: 400px;
+            border: 1px solid #ccc;
+            overflow-y: scroll;
+            padding: 10px;
+        }
+    </style>
 </head>
 <body>
-    <div id="chatbox">
-        <div id="chatlog"></div>
-        <input type="text" id="messageInput" placeholder="Type your message">
-        <button id="sendButton">Send</button>
-    </div>
+    <div id="chatbox"></div>
+    <input type="text" id="message" placeholder="Type your message..." />
+    <button onclick="sendMessage()">Send</button>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-        var chatlog = document.getElementById('chatlog');
-        var messageInput = document.getElementById('messageInput');
-        var sendButton = document.getElementById('sendButton');
+        var socket = io();
 
-        // Event listener for sending messages
-        sendButton.addEventListener('click', function() {
+        // Receive new message from server
+        socket.on('chat message', function (data) {
+            var chatbox = document.getElementById("chatbox");
+            var newMessage = document.createElement("p");
+            newMessage.innerText = data.sender + ": " + data.message;
+            chatbox.appendChild(newMessage);
+        });
+
+        function sendMessage() {
+            var messageInput = document.getElementById("message");
             var message = messageInput.value;
-            sendMessage(message);
-            messageInput.value = '';
-        });
+            messageInput.value = "";
 
-        // Event listener for pressing Enter key
-        messageInput.addEventListener('keypress', function(event) {
-            if (event.keyCode === 13) {
-                var message = messageInput.value;
-                sendMessage(message);
-                messageInput.value = '';
+            if (message.trim() !== "") {
+                var chatbox = document.getElementById("chatbox");
+                var newMessage = document.createElement("p");
+                newMessage.innerText = "You: " + message;
+                chatbox.appendChild(newMessage);
+
+                // Send message to server
+                socket.emit('chat message', { message: message });
             }
-        });
-
-        // Function to send a message
-        function sendMessage(message) {
-            // Display the message in the chat log
-            var messageElement = document.createElement('div');
-            messageElement.textContent = 'You: ' + message;
-            chatlog.appendChild(messageElement);
-
-            // Send the message to the server (AJAX request or WebSocket)
-            // Code for sending the message to the server goes here
         }
     </script>
-    
-    <script href="index.js"></script>
-    
 </body>
 </html>
